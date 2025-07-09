@@ -20,9 +20,10 @@ COPY . .
 RUN npm run build
 
 # 第二阶段：生产阶段
-FROM nginx:alpine
-RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
-RUN echo 'Asia/Shanghai' >/etc/timezone
+FROM nginx:alpine as production-stage
+# 将时区设置合并为一条指令
+RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
+    echo 'Asia/Shanghai' > /etc/timezone
 
 # 从构建阶段复制构建结果
 COPY --from=build-stage /app/dist/ /usr/share/nginx/html/

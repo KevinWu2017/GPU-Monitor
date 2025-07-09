@@ -252,7 +252,7 @@
               </div>
             </template>
             <div v-for="(cur_gpu_info,j) in cur_gpu_data.gpu_list" :key="j">
-              <el-descriptions :title="gen_title(cur_gpu_info.num + cur_gpu_info.name)" :column="getDescriptionColumns()" class-name="descriptions"
+              <el-descriptions :title="gen_title(cur_gpu_info.num, cur_gpu_info.name)" :column="getDescriptionColumns()" class-name="descriptions"
                                label-class-name="descriptions">
                 <el-descriptions-item width="100px" label="Temp:">{{
                     cur_gpu_info.temp

@@ -339,8 +339,8 @@ export default {
                 });
 
         },
-        gen_title(num) {
-            return "GPU-" + num
+        gen_title(num, name) {
+            return "GPU-" + num + " " + name
         },
         //计算内存占用百分比 保留整数位
         cal_memory_usage(used, total) {

@@ -1,0 +1,51 @@
+# Python缓存文件
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# 虚拟环境
+venv/
+env/
+ENV/
+
+# IDE文件
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Git文件
+.git/
+.gitignore
+
+# 日志文件
+*.log
+
+# 临时文件
+.tmp/
+tmp/
+
+# Docker相关
+Dockerfile
+.dockerignore
+
+# 其他不需要的文件
+*.md
