@@ -15,7 +15,17 @@ app = Flask(__name__)
 CORS(app, resources=r'/*')
 ip_service = IpService(COON)
 announcement_service = AnnouncementService(COON)
-servers = [Server(*server) for server in SERVERS_CONFIG]
+
+# 创建服务器列表，只支持SSH密钥认证
+servers = []
+for server_config in SERVERS_CONFIG:
+    if len(server_config) == 4:
+        # 格式：(name, ip, user, key_path)
+        servers.append(Server(*server_config))
+    else:
+        print(f"无效的服务器配置，应为4个参数: {server_config}")
+
+print(f"已配置 {len(servers)} 台服务器")
 
 
 @app.route('/get_gpu_state', methods=['GET'])
@@ -80,33 +90,33 @@ def delete_log():
     return jsonify({"code": 200, "message": "删除  server : " + str(server_name) + " pid : " + str(pid) + " 成功!"})
 
 
-@app.route('/runMC', methods=['GET'])
-def run_mc():
-    # run_mc_server('219.216.64.204', 'mc', 'mc')
-    host = '219.216.64.204'
-    user = 'mc'
-    passwd = 'mc'
-    ssh = paramiko.SSHClient()
-    key = paramiko.AutoAddPolicy()
-    ssh.set_missing_host_key_policy(key)
-    ssh.connect(host, 22, user, passwd)
-    _, stdout, _ = ssh.exec_command(
-        'cd /opt/mc/paper/ && screen -dmS minecraft java -Xms2048m -Xmx4096m -jar paper118.jar nogui > minecraft.log 2>&1\n')
-    return jsonify({"code": 200, "message": "mc-server : 启动成功!"})
+# @app.route('/runMC', methods=['GET'])
+# def run_mc():
+#     # run_mc_server('219.216.64.204', 'mc', 'mc')
+#     host = '219.216.64.204'
+#     user = 'mc'
+#     passwd = 'mc'
+#     ssh = paramiko.SSHClient()
+#     key = paramiko.AutoAddPolicy()
+#     ssh.set_missing_host_key_policy(key)
+#     ssh.connect(host, 22, user, passwd)
+#     _, stdout, _ = ssh.exec_command(
+#         'cd /opt/mc/paper/ && screen -dmS minecraft java -Xms2048m -Xmx4096m -jar paper118.jar nogui > minecraft.log 2>&1\n')
+#     return jsonify({"code": 200, "message": "mc-server : 启动成功!"})
 
 
-# 彩蛋
-@app.route('/stopMC', methods=['GET'])
-def stop_mc():
-    host = '219.216.64.204'
-    user = 'mc'
-    passwd = 'mc'
-    ssh = paramiko.SSHClient()
-    key = paramiko.AutoAddPolicy()
-    ssh.set_missing_host_key_policy(key)
-    ssh.connect(host, 22, user, passwd)
-    _, stdout, _ = ssh.exec_command('cd /opt/mc/paper/ && screen -S minecraft -p 0 -X stuff "stop^M"\n')
-    return jsonify({"code": 200, "message": "mc-server : 关闭成功!"})
+# # 彩蛋
+# @app.route('/stopMC', methods=['GET'])
+# def stop_mc():
+#     host = '219.216.64.204'
+#     user = 'mc'
+#     passwd = 'mc'
+#     ssh = paramiko.SSHClient()
+#     key = paramiko.AutoAddPolicy()
+#     ssh.set_missing_host_key_policy(key)
+#     ssh.connect(host, 22, user, passwd)
+#     _, stdout, _ = ssh.exec_command('cd /opt/mc/paper/ && screen -S minecraft -p 0 -X stuff "stop^M"\n')
+#     return jsonify({"code": 200, "message": "mc-server : 关闭成功!"})
 
 
 # 系统监测模块

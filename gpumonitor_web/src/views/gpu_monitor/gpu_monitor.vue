@@ -3,7 +3,7 @@
     <el-main>
       <el-tabs v-model="activeName" class="demo-tabs" @tab-change="handleTabClick">
         <el-tab-pane label="在线服务器" name="All">
-          <el-button type="warning"  :icon="Edit" style="margin-bottom: 10px" @click="GPU_Appointment">NEUKG服务器显卡预约表</el-button>
+          <!-- <el-button type="warning"  :icon="Edit" style="margin-bottom: 10px" @click="GPU_Appointment">NEUKG服务器显卡预约表</el-button> -->
           <el-card class="box-card" shadow="hover" v-for="(cur_gpu_data,i) in gup_data" :key="i">
             <div @click="go_to_tab(cur_gpu_data.server_name)" class="card-header">
               <span>{{ cur_gpu_data.server_name }}</span>
@@ -12,13 +12,17 @@
                 <span v-if="cur_gpu_data.gpu_list.length===0"
                       style="font-weight: 500;font-size: 16px;color: #d20404;margin-left: 5px">离线</span>
                 <template v-for="(cur_gpu_info,m) in cur_gpu_data.gpu_list" :key="m">
-                  <el-tag v-if="cur_gpu_info.use_memory<100" style="margin-left: 10px" size="large"
+                  <el-tag v-if="cur_gpu_info.use_memory<100" style="margin-left: 10px; font-size: 13px; padding: 8px 12px;" size="large"
                           type="success"
                           effect="dark">
-                    {{ cur_gpu_info.num }}
+                    <span style="font-weight: 600;">GPU{{ cur_gpu_info.num }}</span>
+                    <el-divider direction="vertical" style="margin: 0 6px; border-color: rgba(255,255,255,0.6);"></el-divider>
+                    <span style="font-size: 12px;">{{ cur_gpu_info.gpu_util || 0 }}%</span>
                   </el-tag>
-                  <el-tag v-else style="margin-left: 10px" size="large" type="info" effect="dark">
-                    {{ cur_gpu_info.num }}
+                  <el-tag v-else style="margin-left: 10px; font-size: 13px; padding: 8px 12px;" size="large" type="info" effect="dark">
+                    <span style="font-weight: 600;">GPU{{ cur_gpu_info.num }}</span>
+                    <el-divider direction="vertical" style="margin: 0 6px; border-color: rgba(255,255,255,0.6);"></el-divider>
+                    <span style="font-size: 12px;">{{ cur_gpu_info.gpu_util || 0 }}%</span>
                   </el-tag>
                 </template>
               </div>
@@ -196,7 +200,7 @@
 
 
         </el-tab-pane>
-        <el-tab-pane label="更新日志" name="log">
+        <!-- <el-tab-pane label="更新日志" name="log">
 
           <el-timeline>
             <template v-for="(cur_log,i) in update_log_data" :key="i">
@@ -217,7 +221,7 @@
             </template>
           </el-timeline>
 
-        </el-tab-pane>
+        </el-tab-pane> -->
         <el-tab-pane v-for="(cur_gpu_data,i) in gup_data" :key="i" :label="cur_gpu_data.server_name"
                      :name="cur_gpu_data.server_name">
           <el-card class="box-card" shadow="hover">
@@ -230,13 +234,17 @@
                   <span v-if="cur_gpu_data.gpu_list.length===0"
                         style="font-weight: 500;font-size: 16px;color: #d20404;margin-left: 5px">离线</span>
                   <template v-for="(cur_gpu_info,m) in cur_gpu_data.gpu_list" :key="m">
-                    <el-tag v-if="cur_gpu_info.use_memory<100" style="margin-left: 10px"
+                    <el-tag v-if="cur_gpu_info.use_memory<100" style="margin-left: 10px; font-size: 13px; padding: 8px 12px;"
                             size="large" type="success"
                             effect="dark">
-                      {{ cur_gpu_info.num }}
+                      <span style="font-weight: 600;">GPU{{ cur_gpu_info.num }}</span>
+                      <el-divider direction="vertical" style="margin: 0 6px; border-color: rgba(255,255,255,0.6);"></el-divider>
+                      <span style="font-size: 12px;">{{ cur_gpu_info.gpu_util || 0 }}%</span>
                     </el-tag>
-                    <el-tag v-else style="margin-left: 10px" size="large" type="info" effect="dark">
-                      {{ cur_gpu_info.num }}
+                    <el-tag v-else style="margin-left: 10px; font-size: 13px; padding: 8px 12px;" size="large" type="info" effect="dark">
+                      <span style="font-weight: 600;">GPU{{ cur_gpu_info.num }}</span>
+                      <el-divider direction="vertical" style="margin: 0 6px; border-color: rgba(255,255,255,0.6);"></el-divider>
+                      <span style="font-size: 12px;">{{ cur_gpu_info.gpu_util || 0 }}%</span>
                     </el-tag>
                   </template>
                 </div>
@@ -244,35 +252,60 @@
               </div>
             </template>
             <div v-for="(cur_gpu_info,j) in cur_gpu_data.gpu_list" :key="j">
-              <el-descriptions :title="gen_title(cur_gpu_info.num)" :column="4" class-name="descriptions"
+              <el-descriptions :title="gen_title(cur_gpu_info.num + cur_gpu_info.name)" :column="getDescriptionColumns()" class-name="descriptions"
                                label-class-name="descriptions">
-                <el-descriptions-item width="200px" label="温度:">{{
+                <el-descriptions-item width="100px" label="Temp:">{{
                     cur_gpu_info.temp
                   }}°C
                 </el-descriptions-item>
-                <el-descriptions-item width="200px" label="风扇转速:">{{
+                <!-- <el-descriptions-item width="200px" label="风扇转速:">{{
                     cur_gpu_info.fan
                   }}
-                </el-descriptions-item>
-                <el-descriptions-item width="200px" s label="功率:">{{
+                </el-descriptions-item> -->
+                <el-descriptions-item width="100px" s label="Power:">{{
                     cur_gpu_info.pwr
                   }}
                 </el-descriptions-item>
-                <el-descriptions-item>
+                <el-descriptions-item width="200px">
                   <template v-slot:label>
-                    <el-row style="padding-top:  24px">
-                      <el-col :span="2">显存占用:</el-col>
-                      <el-col :span="5">
-                        <span>{{ cur_gpu_info.use_memory }} MB / {{ cur_gpu_info.total_memory }} MB&nbsp;</span>
+                    <el-row style="padding-top: 24px" type="flex">
+                      <el-col :xs="6" :sm="6" :md="6" :lg="6" :xl="3">
+                        <span style="font-weight: 500; color: #606266; text-align: left;">Memory:</span>
                       </el-col>
-                      <el-col :span="17">
+                      <el-col :xs="1" :sm="1" :md="1" :lg="1" :xl="1">
+                      </el-col>
+                      <el-col :xs="16" :sm="16" :md="16" :lg="16" :xl="19">
                         <el-progress
                             :text-inside="true"
-                            :stroke-width="22"
+                            :stroke-width="18"
                             :percentage="cal_memory_usage(cur_gpu_info.use_memory,cur_gpu_info.total_memory)"
-                            status="warning"
+                            :status="getMemoryStatus(cur_gpu_info.use_memory,cur_gpu_info.total_memory)"
+                            :format="() => `${cur_gpu_info.use_memory} / ${cur_gpu_info.total_memory} MB`"
                         >
                         </el-progress>
+                      </el-col>
+                      <el-col :xs="1" :sm="1" :md="1" :lg="1" :xl="1">
+                      </el-col>
+                    </el-row>
+                  </template>
+                </el-descriptions-item>
+                <el-descriptions-item width="200px">
+                  <template v-slot:label>
+                    <el-row style="padding-top: 24px" type="flex">
+                      <el-col :xs="6" :sm="6" :md="4" :lg="3">
+                        <span style="font-weight: 500; color: #606266; text-align: left;">Util:</span>
+                      </el-col>
+                      <el-col :xs="1" :sm="1" :md="1" :lg="1">
+                      </el-col>
+                      <el-col :xs="16" :sm="16" :md="18" :lg="19">
+                        <el-progress
+                            :text-inside="true"
+                            :stroke-width="18"
+                            :percentage="cur_gpu_info.gpu_util"
+                            :status="getUtilStatus(cur_gpu_info.gpu_util)"
+                        ></el-progress>
+                      </el-col>
+                      <el-col :xs="1" :sm="1" :md="1" :lg="1">
                       </el-col>
                     </el-row>
                   </template>
@@ -323,10 +356,10 @@
               pro_detail.duration
             }}
           </el-descriptions-item>
-          <el-descriptions-item min-width="260px" label="">
+          <!-- <el-descriptions-item min-width="260px" label="">
             <el-button @click="open_log_form" style="margin-left: -16px" type="primary">日志管理</el-button>
             <el-button @click="open_log_drawer = true" type="success">查看日志</el-button>
-          </el-descriptions-item>
+          </el-descriptions-item> -->
           <el-descriptions-item label="进程:">
             <p v-html=" pro_detail.command" @click="share(pro_detail.command)"
                style="color: #219F94;font-weight: 400"></p>
@@ -341,7 +374,7 @@
         </template>
       </el-dialog>
       <!--日志-->
-      <el-drawer
+      <!-- <el-drawer
           style="font-weight: 500;font-size: 16px;color: #34528c;margin-bottom: -20px"
           v-model="open_log_box"
           title="日志管理"
@@ -378,7 +411,7 @@
           </div>
         </template>
 
-      </el-drawer>
+      </el-drawer> -->
 
     </el-main>
 
@@ -388,14 +421,14 @@
               }}  </span>
       <span @click="handleClick_closeMC"> © 2022-2024</span>
       <br/>
-      <el-link type="primary" href="https://github.com/Asimok/GPU-Monitor" target="_blank">
+      <el-link type="primary" href="https://github.com/KevinWu2017/GPU-Monitor" target="_blank">
         <el-image style="width: 18px; height: 18px;margin-right: 4px"
                   :src="require('../../assets/github.png')"/>
         GPU-Monitor
       </el-link>
     </el-footer>
 
-    <el-dialog
+    <!-- <el-dialog
         v-model="easterEggVisible"
         title="恭喜你，发现了彩蛋！"
         width="30%"
@@ -410,7 +443,7 @@
         </el-button>
       </span>
       </template>
-    </el-dialog>
+    </el-dialog> -->
 
     <el-dialog
         v-model="sysInfoShowDialog"

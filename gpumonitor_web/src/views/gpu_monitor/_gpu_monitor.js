@@ -27,12 +27,12 @@ export default {
             easterEggVisible: false,
             sysInfoTimer: null,
             sysInfoShowDialog: false,
-            sysBaseTimeout: 20 * 1000, //默认重置挂起倒计时时间
-            sysInfoTimeout: 20 * 1000, // 当前挂起倒计时时间
+            sysBaseTimeout: 200 * 1000, //默认重置挂起倒计时时间
+            sysInfoTimeout: 200 * 1000, // 当前挂起倒计时时间
             sysInfoTimeoutLimit: 5 * 60 * 1000,// 挂起倒计时上限
             sysCurrentTimeout: 20 * 1000, // 当前系统计时器时间
             sysInfoDialogMessage: '',
-            get_gpu_status_time_gap: 2000,
+            get_gpu_status_time_gap: 20000,
             ip_timer: null,
             ip_timer_interval: 2000, //2s
             get_server_data_timer: null,
@@ -225,12 +225,15 @@ export default {
         document.addEventListener('click', this.resetSysCurrentTimeout)
         document.addEventListener('mousemove', this.resetSysCurrentTimeout)
         document.addEventListener('keydown', this.resetSysCurrentTimeout)
+        // 添加窗口大小变化监听
+        window.addEventListener('resize', this.handleResize)
     },
     beforeDestroy() {
         // 页面销毁时, 移除事件监听
         document.removeEventListener('click', this.resetSysCurrentTimeout)
         document.removeEventListener('mousemove', this.resetSysCurrentTimeout)
         document.removeEventListener('keydown', this.resetSysCurrentTimeout)
+        window.removeEventListener('resize', this.handleResize)
         //清除计时器
         this.resetTimer()
     },
@@ -268,36 +271,6 @@ export default {
             }
         },
 
-        runMC() {
-            console.log("启动mc")
-            this.$http
-                .get("/runMC")
-                .then((res) => {
-                    // console.log(res)
-                    if (res.status === 200) {
-                        console.log("runMC", res.data)
-                        ElMessage.success("MC启动成功！");
-                    }
-                })
-                .catch(() => {
-                    ElMessage.error("MC启动失败！请重试！");
-                });
-        },
-        stopMC() {
-            console.log("关闭mc")
-            this.$http
-                .get("/stopMC")
-                .then((res) => {
-                    // console.log(res)
-                    if (res.status === 200) {
-                        console.log("stopMC", res.data)
-                        ElMessage.success("MC关闭成功！");
-                    }
-                })
-                .catch(() => {
-                    ElMessage.error("MC关闭失败！请重试！");
-                });
-        },
         handleClick() {
             this.clickCount++;
             // console.log(this.clickCount)
@@ -359,7 +332,6 @@ export default {
 
                         // 解析选中tag数据
                         this.update_tag(this.gup_data)
-                        // console.log(this.total_pro)
                     }
                 })
                 .catch(() => {
@@ -373,6 +345,43 @@ export default {
         //计算内存占用百分比 保留整数位
         cal_memory_usage(used, total) {
             return parseInt(used / total * 100)
+        },
+        //根据GPU利用率返回进度条状态颜色
+        getUtilStatus(utilization) {
+            if (utilization >= 80) {
+                return 'exception'  // 红色，高负载
+            } else if (utilization >= 50) {
+                return 'warning'    // 橙色，中等负载
+            } else if (utilization >= 20) {
+                return 'success'    // 绿色，正常负载
+            } else {
+                return ''           // 默认蓝色，低负载
+            }
+        },
+        //根据GPU利用率返回文字颜色
+        getUtilColor(utilization) {
+            if (utilization >= 80) {
+                return '#F56C6C'    // 红色
+            } else if (utilization >= 50) {
+                return '#E6A23C'    // 橙色
+            } else if (utilization >= 20) {
+                return '#67C23A'    // 绿色
+            } else {
+                return '#409EFF'    // 蓝色
+            }
+        },
+        //根据内存使用率返回进度条状态颜色
+        getMemoryStatus(usedMemory, totalMemory) {
+            const memoryUsage = (usedMemory / totalMemory) * 100;
+            if (memoryUsage >= 90) {
+                return 'exception'  // 红色，内存严重不足
+            } else if (memoryUsage >= 75) {
+                return 'warning'    // 橙色，内存紧张
+            } else if (memoryUsage >= 50) {
+                return 'success'    // 绿色，内存使用正常
+            } else {
+                return ''           // 默认蓝色，内存充足
+            }
         },
         //计算用户资源占用
         get_user_usage(pro, total) {
@@ -815,7 +824,22 @@ export default {
             // 跳转至url
             const url = 'https://docs.qq.com/xx';
             window.open(url, "_blank");
-        }
+        },
+        //根据屏幕大小动态调整描述列数
+        getDescriptionColumns() {
+            const width = window.innerWidth;
+            if (width < 768) {
+                return 1; // 小屏幕显示1列
+            } else if (width < 1200) {
+                return 2; // 中等屏幕显示2列
+            } else {
+                return 4; // 大屏幕显示4列
+            }
+        },
+        //处理窗口大小变化
+        handleResize() {
+            this.$forceUpdate(); // 强制更新组件以重新计算列数
+        },
 
     },
 

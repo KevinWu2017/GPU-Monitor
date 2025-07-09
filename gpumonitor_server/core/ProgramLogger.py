@@ -16,4 +16,4 @@ class ProgramLogger:
 
     # 获取日志
     def get_log(self, pid):
-        return self.log_dict[pid]
+        return self.log_dict.get(pid, None)
