@@ -7,9 +7,9 @@ import sqlite3
 # ip 更新时间间隔 (min)
 IP_UPDATE_TIME = 5
 # 查询GPU数据间隔
-REFRESH_SEC = 5
+REFRESH_SEC = 300
 # 20s调用接口 休眠线程
-UPDATE_GAP = 300
+UPDATE_GAP = 900
 # 配置需要监控的服务器
 private_key_path = '/root/.ssh/id_ed25519'  # 私钥钥路径
 SERVERS_CONFIG = [

@@ -28,6 +28,24 @@ class Server(threading.Thread):
         self.paused = False
         self.start()
 
+    def _is_ssh_connected(self) -> bool:
+        """Return True if self.ssh has an active transport (connected)."""
+        try:
+            if not hasattr(self, 'ssh') or self.ssh is None:
+                return False
+            transport = self.ssh.get_transport()
+            return transport is not None and transport.is_active()
+        except Exception:
+            return False
+
+    def _timestamp(self) -> str:
+        """Return current timestamp string for log prefix."""
+        return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    def tprint(self, *args, **kwargs):
+        """Print with a timestamp prefix."""
+        print(f"[{self._timestamp()}]", *args, **kwargs)
+
     def check(self):
         if datetime.datetime.timestamp(datetime.datetime.now()) - self.update_time > UPDATE_GAP:
             self.pause()
@@ -39,24 +57,40 @@ class Server(threading.Thread):
             if not self.paused and not self.check():
                 try:
                     self.update_state()
+                    time.sleep(REFRESH_SEC)
                 except Exception as e:
-                    print(str(e))
-                    if not self.update_ssh():
+                    self.tprint(str(e))
+                    # 若异常大概率是未建立SSH连接，尝试建立连接
+                    if self.update_ssh():
+                        # 冷启动或断连恢复后，立刻采集一次数据，不等待整个REFRESH_SEC
+                        try:
+                            self.update_state()
+                        except Exception as e2:
+                            self.tprint(str(e2))
+                        # 立即采集完成后，再进入正常周期性等待
+                        time.sleep(REFRESH_SEC)
+                    else:
+                        # 连接失败则清空数据并按原周期等待
                         self.gpu_list = []
-            time.sleep(REFRESH_SEC)
+                        time.sleep(REFRESH_SEC)
+            else:
+                # 线程暂停时使用更长的等待时间，减少资源消耗
+                time.sleep(60)  # 暂停时每分钟检查一次即可
 
     def resume(self):
-        print("notify thread: ", self.server_name)
+        self.tprint("notify thread:", self.server_name)
         self.paused = False
 
     def pause(self):
-        print("thread sleep: ", self.server_name)
+        self.tprint("thread sleep:", self.server_name)
         self.paused = True
 
     def notify_thread(self):
         if self.paused:
             # 如果线程没有启动，启动线程
             self.resume()
+        # 更新时间戳，避免线程立即暂停
+        self.update_time = datetime.datetime.timestamp(datetime.datetime.now())
 
     def json(self):
         return {
@@ -72,16 +106,20 @@ class Server(threading.Thread):
             # 使用SSH密钥认证
             private_key = paramiko.Ed25519Key.from_private_key_file(self.key_path)
             ssh.connect(self.ip, 22, self.username, pkey=private_key)
-            print(f"SSH密钥认证成功: {self.server_name}")
+            self.tprint(f"SSH密钥认证成功: {self.server_name}")
             
             self.ssh = ssh
             return True
         except Exception as e:
-            print(f"SSH连接失败 {self.server_name}: {str(e)}")
+            self.tprint(f"SSH连接失败 {self.server_name}: {str(e)}")
             return False
 
     def get_pro_time(self, pid):
         # 进程运行时间
+        if not self._is_ssh_connected():
+            # 最小侵入式：尝试连接，失败则抛出让上层处理
+            if not self.update_ssh():
+                raise RuntimeError("SSH未连接，无法获取进程时间")
         _, stdout, _ = self.ssh.exec_command('ps -o lstart,etime -p ' + pid)
         start_time, duration = 0, 0
         for line in stdout:
@@ -95,6 +133,9 @@ class Server(threading.Thread):
 
     def get_log(self, pid):
         # 获取日志
+        if not self._is_ssh_connected():
+            if not self.update_ssh():
+                return '日志获取失败：SSH未连接'
         cmd = self.LOGGER.get_log(pid)
         _, stdout, _ = self.ssh.exec_command(cmd)
         log = stdout.readlines()
@@ -104,6 +145,10 @@ class Server(threading.Thread):
 
     def update_state(self):
         # 进程状态
+        if not self._is_ssh_connected():
+            # 尝试恢复连接，失败则抛异常给上层run()去处理
+            if not self.update_ssh():
+                raise RuntimeError("SSH未连接，无法更新GPU状态")
         _, stdout, _ = self.ssh.exec_command('ps -o ruser=userForLongName -e -o pid,cmd')
         process_dict = {}
         for line in stdout:
@@ -142,7 +187,7 @@ class Server(threading.Thread):
                         cur_log = self.get_log(pid)
                         log_cmd = log_cmd_result
                 except Exception as e:
-                    print(f"获取进程 {pid} 日志时出错: {str(e)}")
+                    self.tprint(f"获取进程 {pid} 日志时出错: {str(e)}")
                 try:
                     if pid in process_dict:
                         username, command = process_dict[pid]
@@ -152,8 +197,8 @@ class Server(threading.Thread):
                         gpu.program_list.append(
                             Program(pid, command, username, use_memory, start_time, duration, cur_log, log_cmd))
                     else:
-                        print(f"进程 {pid} 在进程列表中未找到")
+                        self.tprint(f"进程 {pid} 在进程列表中未找到")
                 except Exception as e:
-                    print(f"处理进程 {pid} 时出错: {str(e)}")
+                    self.tprint(f"处理进程 {pid} 时出错: {str(e)}")
 
         self.gpu_list = gpu_list

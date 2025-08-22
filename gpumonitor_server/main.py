@@ -11,6 +11,11 @@ from service.announcement_service import AnnouncementService
 
 from service.ip_service import IpService
 
+def tprint(*args, **kwargs):
+    """Print with a timestamp prefix."""
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    print(f"[{timestamp}]", *args, **kwargs)
+
 app = Flask(__name__)
 CORS(app, resources=r'/*')
 ip_service = IpService(COON)
@@ -23,9 +28,9 @@ for server_config in SERVERS_CONFIG:
         # 格式：(name, ip, user, key_path)
         servers.append(Server(*server_config))
     else:
-        print(f"无效的服务器配置，应为4个参数: {server_config}")
+        tprint(f"无效的服务器配置，应为4个参数: {server_config}")
 
-print(f"已配置 {len(servers)} 台服务器")
+tprint(f"已配置 {len(servers)} 台服务器")
 
 
 @app.route('/get_gpu_state', methods=['GET'])
@@ -37,8 +42,7 @@ def get_gpu_state():
     # 读取线程数据
     gup_data = []
     for server in servers:
-        server.notify_thread()
-        server.update_time = datetime.datetime.timestamp(datetime.datetime.now())
+        server.notify_thread()  # 只唤醒暂停的线程，不重置所有服务器的时间戳
         if not server.paused:
             gup_data.append(server.json())
     return gup_data
@@ -147,7 +151,7 @@ def add_announcement():
         else:
             return jsonify({'code': 201, 'message': "认证失败!"})
     except Exception as e:
-        print(str(e))
+        tprint(str(e))
         return jsonify({'code': 200, 'message': "添加失败!"})
 
 
@@ -161,7 +165,7 @@ def delete_announcement():
         else:
             return jsonify({'code': 201, 'message': "认证失败!"})
     except Exception as e:
-        print(str(e))
+        tprint(str(e))
         return jsonify({'code': 200, 'message': "删除失败!"})
 
 
@@ -172,7 +176,7 @@ def get_announcement():
 
 @app.route('/add_push_info', methods=['POST'])
 def add_push_info():
-    print(request.json)
+    tprint(request.json)
     announcement_service.add_push_info(ip=request.remote_addr, announcement_id=request.json['announcement_id'])
     return jsonify({'code': 200, 'message': '添加成功!'})
 
