@@ -16,6 +16,24 @@ SERVERS_CONFIG = [
     # 使用SSH密钥认证（容器内的私钥路径）
     # ('<server_name>', '<ip>', '<username>', '<private_key_path>'),
     
+    ('Omega', '10.0.16.126', 'cpwu', private_key_path),
+    ('R740', '10.0.16.45', 'cpwu', private_key_path),
+    ('R750', '10.0.16.12', 'cpwu', private_key_path),
+    ('A100-R760', '10.0.16.20', 'cpwu', private_key_path),
+    ('R760', '10.0.16.21', 'cpwu', private_key_path),
+    ('ASUS4090x8', '10.0.16.31', 'cpwu', private_key_path),
+    ('ASUS4090x82', '10.0.16.42', 'cpwu', private_key_path),
+    ('Herta', '10.0.16.55', 'cpwu', private_key_path),
+    ('Sparkle', '10.0.16.52', 'cpwu', private_key_path),
+    ('Firefly', '10.0.16.46', 'cpwu', private_key_path),
+    ('Venti', '10.0.16.77', 'cpwu', private_key_path),
+    ('Mona', '10.0.16.79', 'cpwu', private_key_path),
+    ('Eula', '10.0.16.82', 'cpwu', private_key_path),
+    ('Keqing', '10.0.16.83', 'cpwu', private_key_path),
+    ('Zhongli', '10.0.16.86', 'cpwu', private_key_path),
+    ('Ayaka', '10.0.16.87', 'cpwu', private_key_path),
+    ('40904', '10.0.16.114', 'cpwu', private_key_path),
+    ('A1004', '10.0.16.116', 'cpwu', private_key_path),
 ]
 
 """

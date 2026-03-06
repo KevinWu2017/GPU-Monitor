@@ -2,7 +2,7 @@ import axios from 'axios'
 
 const request = axios.create({
     // baseURL: 'http://<server-ip>:7030',
-
+    baseURL: 'http://10.0.16.44:7030',
     timeout: 10000,
 })
 // request 拦截器
